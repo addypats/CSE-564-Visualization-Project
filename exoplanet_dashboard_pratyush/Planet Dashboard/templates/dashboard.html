@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>D3 Dashboard</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <style>
+        /* Ensure the SVG container has appropriate styling */
+        #parallel-coordinates-plot svg {
+            font-family: 'Arial', sans-serif;
+            user-select: none; /* Prevent text selection during dragging */
+            background: transparent; /* Set a white background for clarity */
+        }
+
+
+        /* Highlight the axis while it's being dragged */
+        #parallel-coordinates-plot .dragging {
+            opacity: 0.8; /* Make the element slightly transparent while dragging */
+            stroke: red; /* Red stroke to highlight the axis */
+            stroke-width: 2px; /* Make the stroke thicker to stand out */
+        }
+
+        /* Background paths are lighter and less prominent */
+        #parallel-coordinates-plot .background path {
+            fill: none;
+            /*stroke: #eee; /* Light grey color for background lines */
+            stroke-opacity: 0.5; /* Slightly transparent */
+        }
+
+        /* Foreground paths are bolder and more prominent */
+        #parallel-coordinates-plot .foreground path {
+            fill: none;
+            stroke: steelblue; /* Blue color for foreground lines */
+            stroke-width: 0.5px;
+        }
+        #parallel-coordinates-plot .foreground path.selected {
+            stroke: white; /* Blue color for foreground lines */
+            stroke-width: 3px;
+            stroke-opacity: 1;
+            
+
+        }
+
+        /* Text labels for axes */
+        #parallel-coordinates-plot .dimension text {
+            font-size: 12px;
+            cursor: move; /* Cursor indicates that you can drag the axes */
+            text-anchor: end;
+        }
+
+        /* Additional styling for the axes when being dragged */
+        #parallel-coordinates-plot .dimension.dragging text {
+            fill: red; /* Change text color to red when dragging */
+        }
+
+        /* Make sure that no fill is applied by default to paths */
+        #parallel-coordinates-plot path {
+            fill: none;
+        }
+
+    </style>
+    <style>
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 1em;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-variant: small-caps;
+
+        }
+        .point{
+            z-index: 0;
+        }
+    </style>
+    <style>
+        body{
+            margin:0;
+            padding:0;
+            background-color: #151111;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-variant: small-caps;
+        }
+        .header{
+            display: flex;
+            flex-direction: row;
+        }
+        .header .label{
+            flex-grow:4;
+            text-align: center;
+        }
+        .header button{
+            background-color: #4682b4;
+            padding: 1em 2em;
+            font-variant: small-caps;
+            color:#ffffff;
+            border: solid 2px #4682b4
+        }
+        .header button:hover{
+            background-color: #69bcff;
+
+            border: solid 2px #69bcff;
+            cursor: pointer;
+        }
+
+
+        h1, h2, h3{
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .dashboard {
+            padding:20px;
+
+            display: grid;
+            grid-template-columns: 1fr; /* Initially, one plot per row for mobile */
+            gap: 20px;
+            height: 100vh; /* Full height for bigger screens */
+        }
+
+        @media screen and (min-width: 768px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr); /* Two plots per row for bigger screens */
+            }
+        }
+
+        #observatory-map-container,
+        #parallel-coordinates-plot-container,
+        #bubble-chart-container,
+        #dbscan-chart-container,
+        #observatory-map-container > svg,
+        #parallel-coordinates-plot-container > svg,
+        #bubble-chart-container > svg,
+        #dbscan-chart-container > svg {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #observatory-map,
+        #parallel-coordinates-plot,
+        #bubble-chart,
+        #dbscan-chart {
+            width: 100%;
+            height: 50vh;
+            overflow: visible;
+
+        }
+
+
+
+        #observatory-map svg path.country {
+            fill: rgb(37, 41, 45); 
+            stroke: #ffffff;
+            stroke-width: 0.5px;
+        }
+
+
+        #observatory-map svg circle.point {
+            fill: #ff6347; /* Tomato red fill color for the observatory points */
+            stroke: #ffffff; /* White stroke color for the observatory points */
+        }
+
+        #observatory-map svg circle.point.selected {
+            fill: green; /* Green color for observatory points */
+            stroke: #ffffff; /* White stroke color for the observatory points */
+        }
+        #observatory-map svg circle.point.highlight {
+            fill: blue; /* Color for highlighted points */
+            stroke: yellow; /* Stroke to enhance visibility */
+            stroke-width: 2;
+        }
+
+        #parallel-coordinates-plot svg .axis line,
+        #parallel-coordinates-plot svg .axis path {
+            fill: none;
+            stroke: #ffffff; /* Dark gray color for axis lines */
+            shape-rendering: crispEdges;
+        }
+        
+
+        #parallel-coordinates-plot svg .tick text {
+            font-size: 10px;
+            cursor: move;
+            fill: #ffffff; /* White color for axis tick text */
+        }        
+        #bubble-chart svg .bubbles:hover {
+            stroke-width: 2px;
+            opacity: .8;
+        }
+
+        #bubble-chart svg .bubbles {
+            fill: #4682b4; /* Steel blue fill color for bubbles */
+            stroke: #ffffff; /* White stroke color for bubbles */
+            stroke-width: 0.5px;
+            opacity: .5
+        }
+
+        #bubble-chart svg g path,
+        #bubble-chart svg g line
+        {
+            stroke: #ffffff;
+        }
+        #bubble-chart svg g text,
+        #dbscan-chart svg g text{
+            fill: #ffffff;
+        }
+
+
+        #bubble-chart svg .bubbles.selected {
+            opacity: 1;
+            stroke-width: 2; 
+        }
+
+        #dbscan-chart svg .dot {
+            stroke: #ffffff; /* White stroke color for bubbles */
+            stroke-width: 0.5px;
+            opacity: .5
+        }
+        #dbscan-chart svg .dot:hover {
+            stroke-width: 2px;
+            opacity: .8;
+
+        }
+
+        #dbscan-chart svg .dot.selected{
+            opacity: 1;
+            stroke-width: 2; 
+            r: 10;
+        }
+
+        #dbscan-chart svg .domain {
+            stroke: #ffffff; /* Dark gray color for axis domain */
+        }
+
+        #dbscan-chart svg .tick line {
+            stroke: #ffffff
+            ; /* Dark gray color for tick lines */
+        }
+
+        #dbscan-chart svg .tick text {
+            fill: #ffffff; /* White color for tick text */
+        }
+
+    </style>
+        
+</head>
+<body>
+    <div class="tooltip"></div>
+    <div class="header">
+        <div class="label">
+            <h1>Planet Dashboard</h1>
+        </div>
+        <button class="reset-dashboard">Reset</button>
+    </div>
+    <div class="dashboard">
+        <div id="observatory-map">
+            <h3>Observatory Map</h3>
+            <div id="observatory-map-container"></div>
+        </div>
+        <div id="parallel-coordinates-plot">
+            <h3>Parallel Coordinates Plot</h3>
+            <div id="parallel-coordinates-plot-container"></div>
+        </div>
+        <div id="bubble-chart">
+            <h3>Bubble Chart</h3>
+            <div id="bubble-chart-container"></div>
+        </div>
+        <div id="dbscan-chart">
+            <h3>Distance based Clustering (Based on <i>stellar metallicity, orbital period, eccentricity, planetary mass, and insolation flux</i>)</h3>
+            <div id="dbscan-chart-container"></div>
+        </div>
+    </div>
+
+
+    
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
