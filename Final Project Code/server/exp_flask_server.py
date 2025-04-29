@@ -26,7 +26,7 @@ CORS(app)
 # Load data
 data = pd.read_csv('data_exo.csv')
 
-
+###########################  WORKS  ###########################
 
 @app.route('/columns', methods=['GET'])
 def get_columns():
@@ -34,7 +34,7 @@ def get_columns():
     column_names = data.columns.tolist()
     return jsonify(column_names)
 
-
+###########################  WORKS  ###########################
 
 def clean_percentage(value):
     """Convert percentage strings to float numbers."""
@@ -44,24 +44,60 @@ def clean_percentage(value):
     return value
 
 
+###########################  WORKS  ###########################
+
 @app.route('/getdata', methods=['GET'])
 def get_data():
-    column_name = request.args.get('column', 'GDP per capita')
+    # column_name = request.args.get('column', 'pl_orbeccen')
+    # print("#######################################\n")
+    # print(column_name)
+    # print("#######################################\n")
+    # print(data.columns)
+    # print("#######################################\n")
+
+    # if column_name not in data.columns:
+    #     return jsonify({'error': 'Column not found'}), 404
+
+    # # Apply cleaning function to the column if it contains percentage signs
+    # if data[column_name].dtype == 'object' and '%' in data[column_name].iloc[0]:
+    #     data[column_name] = data[column_name].apply(clean_percentage)
+
+    # # Prepare data to be JSON serializable, including only non-NaN entries
+    # response_data = data[['Country name', column_name]].dropna().to_dict(orient='records')
+    # return jsonify(response_data)
+
+    """Return name + arbitrary column values for exoplanet data"""
+    column_name = request.args.get('column', 'pl_orbeccen')
+
+    print("#######################################\n")
+    print(column_name)
+    print("#######################################\n")
+    print(data.columns)
+    print("#######################################\n")
+
+    # app.logger.debug(f"Requested column: {column_name}")
+    # app.logger.debug(f"Available columns: {data.columns.tolist()}")
 
     if column_name not in data.columns:
         return jsonify({'error': 'Column not found'}), 404
 
-    # Apply cleaning function to the column if it contains percentage signs
-    if data[column_name].dtype == 'object' and '%' in data[column_name].iloc[0]:
-        data[column_name] = data[column_name].apply(clean_percentage)
+    series = data[column_name]
+    # Clean percentage strings if present
+    if series.dtype == object and series.str.contains('%').any():
+        series = series.apply(clean_percentage)
 
-    # Prepare data to be JSON serializable, including only non-NaN entries
-    response_data = data[['Country name', column_name]].dropna().to_dict(orient='records')
-    return jsonify(response_data)
+    payload = (
+        data[['pl_name', column_name]]
+        .dropna()
+        .to_dict(orient='records')
+    )
+    return jsonify(payload)
 
+
+###########################  WORKS  ###########################
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)  # Set the logging level to DEBUG
+# logging.basicConfig(level=logging.DEBUG)  # Set the logging level to DEBUG
 
 
 # Clean data
@@ -89,6 +125,53 @@ def clean_data_pcp(value):
         except ValueError:
             return None  # Return None if conversion fails
     return value
+
+
+
+@app.route('/planet-info', methods=['GET'])
+def get_planet_info():
+    # selected_countries_str = request.args.get('countries', '')
+
+    # # Split the selected countries by comma
+    # selected_countries = [country.strip().lower() for country in selected_countries_str.split(',') if country.strip()]
+
+    # logging.debug(f"Selected countries: {selected_countries}")
+
+    # # Convert all country names in the dataset to lowercase for case-insensitive comparison
+    # valid_countries = set(data['Country name'].str.strip().str.lower())
+
+    # # Convert all country names in the dataset to lowercase for case-insensitive comparison
+    # invalid_countries = [country for country in selected_countries if country.lower() not in valid_countries]
+
+    # if invalid_countries:
+    #     error_message = f"Invalid countries: {', '.join(invalid_countries)}"
+    #     logging.error(error_message)
+    #     return jsonify({"error": error_message}), 400
+
+    # # Extract information for the selected countries
+    # result = {}
+    # for country in selected_countries:
+    #     country_info = data[data['Country name'].str.strip().str.lower() == country.lower()].to_dict(orient='records')[0]
+        
+    #     # Handle NaN values in country_info
+    #     country_info = {k: v if not isinstance(v, float) or not np.isnan(v) else None for k, v in country_info.items()}
+        
+    #     result[country] = country_info
+
+    # return jsonify(result)
+
+    # Build a mapping from planet name to full record
+    records = data.to_dict(orient='records')
+    result = {}
+    for rec in records:
+        name = rec.get('pl_name')
+        if name:
+            # Replace NaN with None for JSON compatibility
+            clean_rec = {k: (None if (isinstance(v, float) and np.isnan(v)) else v)
+                         for k, v in rec.items()}
+            result[name] = clean_rec
+    return jsonify(result)
+
 
 
 
@@ -149,4 +232,4 @@ def api_raw_data():
 # --------------------
 if __name__ == '__main__':
     # For production, disable debug and consider a WSGI server
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
