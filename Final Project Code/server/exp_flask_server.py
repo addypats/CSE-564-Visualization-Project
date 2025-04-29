@@ -99,34 +99,7 @@ def get_data():
 # Configure logging
 # logging.basicConfig(level=logging.DEBUG)  # Set the logging level to DEBUG
 
-
-# Clean data
-def clean_data(value):
-    if isinstance(value, str):
-        # Remove % and other non-numeric characters except for the negative sign and decimal point
-        cleaned = ''.join(c for c in value if c.isdigit() or c in ['-', '.'])
-        try:
-            # Convert to float first to preserve any decimals
-            return float(cleaned)
-        except ValueError:
-            return None  # Return None if conversion fails
-    elif isinstance(value, (int, float)):  # Handle numeric types that might be directly usable or NaN
-        return value if not pd.isna(value) else None
-    return None  # Ensure that all other types are converted to None if not specifically handled
-
-
-def clean_data_pcp(value):
-    if isinstance(value, str):
-        # Remove % and other non-numeric characters except for the negative sign and decimal point
-        cleaned = ''.join(c for c in value if c.isdigit() or c in ['-', '.'])
-        try:
-            # Convert to float first to preserve any decimals, then to int if needed
-            return float(cleaned)
-        except ValueError:
-            return None  # Return None if conversion fails
-    return value
-
-
+###########################  WORKS  ###########################
 
 @app.route('/planet-info', methods=['GET'])
 def get_planet_info():
@@ -171,6 +144,178 @@ def get_planet_info():
                          for k, v in rec.items()}
             result[name] = clean_rec
     return jsonify(result)
+
+###########################  WORKS  ###########################
+
+
+
+def clean_data(value):
+    # if isinstance(value, str):
+    #     # Remove % and other non-numeric characters except for the negative sign and decimal point
+    #     cleaned = ''.join(c for c in value if c.isdigit() or c in ['-', '.'])
+    #     try:
+    #         # Convert to float first to preserve any decimals
+    #         return float(cleaned)
+    #     except ValueError:
+    #         return None  # Return None if conversion fails
+    # elif isinstance(value, (int, float)):  # Handle numeric types that might be directly usable or NaN
+    #     return value if not pd.isna(value) else None
+    # return None  # Ensure that all other types are converted to None if not specifically handled
+
+    """Normalize string or numeric inputs to float, handling percentages and NaNs."""
+    # Handle string inputs (e.g., "12.3%" or "-45.6")
+    if isinstance(value, str):
+        # Keep digits, decimal point, and minus sign
+        cleaned = ''.join(c for c in value if c.isdigit() or c in ['-', '.'])
+        try:
+            return float(cleaned)
+        except ValueError:
+            return None
+    # Handle numeric types, converting NaN to None
+    if isinstance(value, (int, float)):
+        try:
+            return None if pd.isna(value) else float(value)
+        except Exception:
+            return None
+    # Fallback for other types
+    return None
+
+
+###########################  WORKS  ###########################
+
+
+
+
+@app.route('/scatter_data')
+def scatter_data():
+    # column_name = request.args.get('column', 'GDP per capita')
+    
+    # if column_name not in data.columns:
+    #     return jsonify({'error': 'Column not found'}), 404
+
+    # scatter_plot_data = {
+    #     'ladder_score': [],
+    #     column_name: [],
+    #     'country_name': []
+    # }
+    
+    # try:
+    #     for _, row in data.iterrows():
+    #         ladder_score = clean_data(row['Ladder score'])
+    #         column_value = clean_data(row[column_name])
+            
+    #         if ladder_score is not None and column_value is not None:  # Check both values are not None
+    #             scatter_plot_data['ladder_score'].append(ladder_score)
+    #             scatter_plot_data[column_name].append(column_value)
+    #             scatter_plot_data['country_name'].append(row['Country name'])
+
+    #     return jsonify(scatter_plot_data)
+    # except Exception as e:
+    #     return jsonify({'error': str(e)}), 500
+
+    # Fixed x-axis column
+    x_column = 'pl_orbeccen'
+    # Dynamic y-axis provided via query, default to 'pl_rade'
+    y_column = request.args.get('column', 'pl_rade')
+
+    # Verify columns exist
+    if x_column not in data.columns or y_column not in data.columns:
+        return jsonify({'error': 'Column not found'}), 404
+
+    scatter_plot_data = {
+        x_column: [],
+        y_column: [],
+        'pl_name': []
+    }
+
+    # Iterate and collect non-null pairs
+    for _, row in data.iterrows():
+        x = row[x_column]
+        y = row[y_column]
+        if pd.notnull(x) and pd.notnull(y):
+            scatter_plot_data[x_column].append(x)
+            scatter_plot_data[y_column].append(y)
+            scatter_plot_data['pl_name'].append(row['pl_name'])
+
+    return jsonify(scatter_plot_data)
+
+###########################  WORKS  ###########################
+
+
+@app.route('/pie-chart')
+def pie_chart():
+    # region_group = data.groupby('Region')['Ladder score'].mean().reset_index()
+    # result = region_group.to_dict(orient='records')  # Converts DataFrame to list of dicts
+    # return jsonify(result)
+
+    # Group by discovery method column and count planets
+    # Using 'discoverymethod' as the categorical column in exoplanets data
+    method_col = 'discoverymethod'
+    if method_col not in data.columns:
+        return jsonify({'error': f'Column "{method_col}" not found'}), 404
+    pie_df = data.groupby(method_col).size().reset_index(name='count')
+    return jsonify(pie_df.to_dict(orient='records'))
+
+###########################  WORKS  ###########################
+
+
+def clean_data_pcp(value):
+    # if isinstance(value, str):
+    #     # Remove % and other non-numeric characters except for the negative sign and decimal point
+    #     cleaned = ''.join(c for c in value if c.isdigit() or c in ['-', '.'])
+    #     try:
+    #         # Convert to float first to preserve any decimals, then to int if needed
+    #         return float(cleaned)
+    #     except ValueError:
+    #         return None  # Return None if conversion fails
+    # return value
+
+    """Normalize string or numeric inputs for PCP, preserving decimals and negatives."""
+    if isinstance(value, str):
+        cleaned = ''.join(c for c in value if c.isdigit() or c in ['-', '.'])
+        try:
+            return float(cleaned)
+        except ValueError:
+            return None
+    if isinstance(value, (int, float)):
+        return None if pd.isna(value) else value
+    return None
+
+
+@app.route('/pcp')
+def pcp_data():
+    # # Manually specify the columns to send
+    # cleaned_data = clean_data_pcp(data.copy())
+    # categorical_columns = ['Country name', 'Region', 'Income Category']  # List categorical columns
+    # mappings = {}
+    # for column in categorical_columns:
+    #     # pandas factorize returns two objects: an array and an Index of unique labels
+    #     cleaned_data[column], labels = pd.factorize(cleaned_data[column])
+    #     mappings[column] = dict(enumerate(labels))
+    # columns_to_send = ['Country name', 'Ladder score', 'GDP per capita', 'Social support','Healthy life expectancy','Freedom to make life choices',
+    #                    'Generosity','Perceptions of corruption', 'Region', 'Income Category']
+    # filtered_data = cleaned_data[columns_to_send]
+
+    # return jsonify({'data': filtered_data.to_dict(orient='records'), 'mappings': mappings})
+
+    # Copy and clean numeric fields
+    cleaned_df = data.copy()
+    numeric_cols = ['pl_orbeccen', 'pl_rade', 'pl_bmasse', 'pl_orbper', 'sy_dist']
+    for col in numeric_cols:
+        if col in cleaned_df.columns:
+            cleaned_df[col] = cleaned_df[col].apply(clean_data_pcp)
+    # Define categorical columns and generate mappings
+    categorical_columns = ['discoverymethod', 'hostname']
+    mappings = {}
+    for column in categorical_columns:
+        if column in cleaned_df.columns:
+            cleaned_df[column], labels = pd.factorize(cleaned_df[column])
+            mappings[column] = dict(enumerate(labels))
+    # Select relevant columns for PCP
+    columns_to_send = [*categorical_columns, *numeric_cols]
+    filtered_data = cleaned_df[columns_to_send]
+    return jsonify({'data': filtered_data.to_dict(orient='records'), 'mappings': mappings})
+
 
 
 
