@@ -1,22 +1,24 @@
-html {
+/* src/App.css */
+
+/* Reset & globals */
+*, *::before, *::after {
+    box-sizing: border-box;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
     background-color: azure;
+    font-family: Arial, sans-serif;
   }
   
-  h4, .h4 {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-  
-  /* Container for the entire app */
+  /* App container */
   .app-container {
-    width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 0;
-    margin: 0;
+    width: 100%;
   }
   
-  /* Banner at top with controls and title */
+  /* Top banner */
   .banner {
     display: flex;
     justify-content: space-between;
@@ -25,6 +27,7 @@ html {
     padding: 10px 20px;
   }
   
+  /* Title */
   .title {
     flex-grow: 1;
     text-align: center;
@@ -33,68 +36,39 @@ html {
     color: #333;
   }
   
-  /* Grid layout for all chart components */
+  /* Responsive grid for charts */
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     grid-auto-rows: auto;
     gap: 20px;
     padding: 20px;
-    box-sizing: border-box;
   }
   
-  /* Each chart cell */
+  /* Individual chart styling */
   .chart {
-    background-color: white;
+    background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     padding: 10px;
-    min-height: 300px;
     display: flex;
     flex-direction: column;
+    min-height: 300px;
   }
   
-  /* Specific styling for map chart to ensure it fills its cell */
+  /* Make the map span two columns */
   .map-chart {
     grid-column: span 2;
-    /* On larger screens, map spans two columns */
   }
   
-  /* Info panel styling */
-  .info-panel {
-    grid-column: span 2;
-    background-color: #fafafa;
-  }
-  
-  /* Column selector dropdown styling */
-  .column-selector {
-    margin-right: 20px;
-  }
-  
-  /* Text in radar chart containers */
-  .radar-chart-container text {
-    font-weight: bold;
-    fill: black;
-  }
-  
-  /* Legend styling for charts */
-  .legend {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    margin-bottom: 20px;
-    align-items: center;
-  }
-  
-  .legend-item {
-    display: flex;
-    align-items: center;
-    margin-right: 15px;
-  }
-  
-  .legend-color {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
+  /* Tooltip defaults */
+  .tooltip {
+    position: absolute;
+    background: rgba(255,255,255,0.9);
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    border-radius: 4px;
+    pointer-events: none;
+    font-size: 0.9rem;
   }
   

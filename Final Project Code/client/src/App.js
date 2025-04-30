@@ -84,12 +84,12 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-import ColumnSelector   from './components/ColumnSelector';
-import WorldMap         from './components/Map';
-import BubbleChart      from './components/BubbleChart';
-import ClusterChart     from './components/ClusterChart';
-import ScatterPlot      from './components/ScatterPlot';
-import PieChart         from './components/PieChart';
+import ColumnSelector   from './components/Column_Selector';
+import WorldMap         from './components/World_Map';
+import BubbleChart      from './components/Bubble_Chart';
+import ClusterChart     from './components/Cluster_Chart';
+import ScatterPlot      from './components/Scatter_Plot';
+import PieChart         from './components/Pie_Chart';
 import PCP              from './components/PCP';
 
 function App() {
@@ -97,21 +97,23 @@ function App() {
 
   // Numeric columns for scatter Y-axis
   const [columnNames, setColumnNames] = useState([]);
-  // Observatories for filtering bubble & cluster charts
+  // Observatory names for filtering bubble & cluster charts
   const [observatoryNames, setObservatoryNames] = useState([]);
 
-  // Selected states
-  const [selectedColumn, setSelectedColumn] = useState('pl_rade');
+  // Currently selected metric and observatory
+  const [selectedColumn, setSelectedColumn]       = useState('pl_rade');
   const [selectedObservatory, setSelectedObservatory] = useState('undefined');
 
   useEffect(() => {
-    // Fetch exoplanet numeric columns
+    // 1) Load exoplanet numeric columns
     fetch(`${API_BASE}/columns`)
       .then(res => res.json())
-      .then(cols => setColumnNames(cols.filter(c => c.startsWith('pl_'))))
+      .then(cols => {
+        setColumnNames(cols.filter(c => c.startsWith('pl_')));
+      })
       .catch(console.error);
 
-    // Fetch observatory names via map endpoint
+    // 2) Load observatory names from the map endpoint
     fetch(`${API_BASE}/data/map`)
       .then(res => res.json())
       .then(geojson => {
@@ -127,7 +129,8 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Banner with metric selector */}
+
+      {/* Top banner */}
       <div className="banner">
         <ColumnSelector
           columns={columnNames}
@@ -137,9 +140,10 @@ function App() {
         <div className="title">Exoplanet Dashboard</div>
       </div>
 
-      {/* Responsive grid of charts */}
+      {/* Main grid */}
       <div className="grid">
-        {/* World Map */}
+
+        {/* World map */}
         <div className="chart map-chart">
           <WorldMap
             selectedObservatory={selectedObservatory}
@@ -147,17 +151,17 @@ function App() {
           />
         </div>
 
-        {/* Bubble Chart */}
+        {/* Bubble chart */}
         <div className="chart">
           <BubbleChart facility={selectedObservatory} />
         </div>
 
-        {/* Cluster Chart */}
+        {/* Cluster chart */}
         <div className="chart">
           <ClusterChart facility={selectedObservatory} />
         </div>
 
-        {/* Scatter Plot */}
+        {/* Scatter plot */}
         <div className="chart">
           <ScatterPlot
             y={selectedColumn}
@@ -165,12 +169,12 @@ function App() {
           />
         </div>
 
-        {/* Pie Chart */}
+        {/* Pie chart */}
         <div className="chart">
           <PieChart />
         </div>
 
-        {/* Parallel Coordinates Plot */}
+        {/* Parallel coordinates */}
         <div className="chart">
           <PCP />
         </div>
