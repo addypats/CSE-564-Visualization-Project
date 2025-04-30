@@ -5,6 +5,7 @@ from flask_cors import CORS
 import numpy as np
 import logging
 import json
+import csv
 
 
 app = Flask(__name__)
@@ -191,6 +192,66 @@ def pcp_data():
 
 
 ###########################  WORKS  ###########################
+
+
+@app.route('/data/map')
+def map_data():
+    # Assume you have a function to get your GeoJSON data
+    worldData = get_geojson_data()
+    observatoryLocationData = get_observatory_location_data()
+    data = merge_features(worldData,[observatoryLocationData])
+    return jsonify(data)
+
+
+
+# map_data helper functions
+
+def merge_features(target_json, source_jsons):
+    for json in source_jsons:
+        target_json['features'] = target_json['features'] + json['features']
+    return target_json
+
+def get_observatory_location_data():
+    df = pd.read_csv('data_exo.csv')
+
+    geojson_features = []
+    with open('data_exo.csv', mode='r', encoding='utf-8') as file:
+        csv_reader = csv.DictReader(file)
+        for row in csv_reader:
+            try:
+                # Convert latitude and longitude to float
+                latitude = float(row['lat']) if row['lat'] else None
+                longitude = float(row['long']) if row['long'] else None
+                
+                # Skip rows with missing latitude or longitude
+                if latitude is not None and longitude is not None:
+                    feature = {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [longitude, latitude]
+                        },
+                        "properties": {
+                            "name": row['disc_facility']
+                        }
+                    }
+                    geojson_features.append(feature)
+            except ValueError:
+                print(f"Skipping row with invalid data: {row}")
+        
+        geojson_features = {
+            "type" : "FeatureCollection",
+            "features" : geojson_features
+        }
+
+        return geojson_features
+
+def get_geojson_data():
+    with open('geo.json', 'r', encoding='utf-8') as f:
+        geojson_data = json.load(f)
+    return geojson_data
+
+
 
 # --------------------
 # Main Entrypoint
