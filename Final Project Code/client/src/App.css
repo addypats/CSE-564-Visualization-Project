@@ -1,23 +1,22 @@
 html {
     background-color: azure;
-}
-h4, .h4 {
-    margin-top: 0px;
-    margin-bottom: 0px;
-}
-.app-container {
-    width: 100%;
   }
   
-  .component {
-    display: inline-block;
-    vertical-align: top;
-    max-width: 100; /* Adjust accordingly */
-    min-height: 300px; /* Adjust if more height is needed */
-    padding: 10px;
-    box-sizing: border-box;
-    font-size: 16px; /* Reset the font size */
+  h4, .h4 {
+    margin-top: 0;
+    margin-bottom: 0;
   }
+  
+  /* Container for the entire app */
+  .app-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    margin: 0;
+  }
+  
+  /* Banner at top with controls and title */
   .banner {
     display: flex;
     justify-content: space-between;
@@ -34,37 +33,68 @@ h4, .h4 {
     color: #333;
   }
   
-  /* Clearfix may still be needed depending on other factors */
-  .app-container::after {
-    content: "";
-    display: table;
-    clear: both;
+  /* Grid layout for all chart components */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-auto-rows: auto;
+    gap: 20px;
+    padding: 20px;
+    box-sizing: border-box;
   }
   
+  /* Each chart cell */
+  .chart {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 10px;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Specific styling for map chart to ensure it fills its cell */
+  .map-chart {
+    grid-column: span 2;
+    /* On larger screens, map spans two columns */
+  }
+  
+  /* Info panel styling */
+  .info-panel {
+    grid-column: span 2;
+    background-color: #fafafa;
+  }
+  
+  /* Column selector dropdown styling */
+  .column-selector {
+    margin-right: 20px;
+  }
+  
+  /* Text in radar chart containers */
   .radar-chart-container text {
     font-weight: bold;
-    fill: black; /* SVG text color is controlled with fill */
+    fill: black;
   }
-
-
-
+  
+  /* Legend styling for charts */
   .legend {
     display: flex;
-    flex-wrap: nowrap; /* Prevent wrapping of items */
-    overflow-x: auto; /* Allow horizontal scrolling */
-    margin-bottom: 20px; /* Add some bottom margin if needed */
-    align-items: center; /* Align items vertically in the center */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-bottom: 20px;
+    align-items: center;
   }
   
   .legend-item {
     display: flex;
     align-items: center;
-    margin-right: 15px; /* Space between legend items */
+    margin-right: 15px;
   }
   
   .legend-color {
     width: 20px;
     height: 20px;
-    margin-right: 10px; /* Space between color box and label text */
+    margin-right: 10px;
   }
   
