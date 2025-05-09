@@ -81,39 +81,226 @@
 
 
 // src/App.js
+// import React, { useState, useEffect } from 'react';
+// import './App.css';
+
+// import ColumnSelector   from './components/Column_Selector';
+// import WorldMap         from './components/World_Map';
+// import BubbleChart      from './components/Bubble_Chart';
+// import ClusterChart     from './components/Cluster_Chart';
+// import ScatterPlot      from './components/Scatter_Plot';
+// import PieChart         from './components/Pie_Chart';
+// import PCP              from './components/PCP';
+
+// function App() {
+//   const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+
+//   // Numeric columns for scatter Y-axis
+//   const [columnNames, setColumnNames] = useState([]);
+//   // Observatory names for filtering bubble & cluster charts
+//   const [observatoryNames, setObservatoryNames] = useState([]);
+
+//   // Currently selected metric and observatory
+//   const [selectedColumn, setSelectedColumn]       = useState('pl_rade');
+//   const [selectedObservatory, setSelectedObservatory] = useState('undefined');
+
+//   useEffect(() => {
+//     // 1) Load exoplanet numeric columns
+//     fetch(`${API_BASE}/columns`)
+//       .then(res => res.json())
+//       .then(cols => {
+//         setColumnNames(cols.filter(c => c.startsWith('pl_')));
+//       })
+//       .catch(console.error);
+
+//     // 2) Load observatory names from the map endpoint
+//     fetch(`${API_BASE}/data/map`)
+//       .then(res => res.json())
+//       .then(geojson => {
+//         const names = Array.from(new Set(
+//           geojson.features
+//             .filter(f => f.properties?.name)
+//             .map(f => f.properties.name)
+//         ));
+//         setObservatoryNames(names);
+//       })
+//       .catch(console.error);
+//   }, []);
+
+//   return (
+//     <div className="app-container">
+
+//       {/* Top banner */}
+//       <div className="banner">
+//         <ColumnSelector
+//           columns={columnNames}
+//           selected={selectedColumn}
+//           onSelect={setSelectedColumn}
+//         />
+//         <div className="title">Exoplanet Dashboard</div>
+//       </div>
+
+//       {/* Main grid */}
+//       <div className="grid">
+
+//         {/* World map */}
+//         <div className="chart map-chart">
+//           <WorldMap
+//             selectedObservatory={selectedObservatory}
+//             onSelectObservatory={setSelectedObservatory}
+//           />
+//         </div>
+
+//         {/* Bubble chart */}
+//         <div className="chart">
+//           <BubbleChart facility={selectedObservatory} />
+//         </div>
+
+//         {/* Cluster chart */}
+//         <div className="chart">
+//           <ClusterChart facility={selectedObservatory} />
+//         </div>
+
+//         {/* Scatter plot */}
+//         <div className="chart">
+//           <ScatterPlot
+//             y={selectedColumn}
+//             onPointClick={() => {}}
+//           />
+//         </div>
+
+//         {/* Pie chart */}
+//         <div className="chart">
+//           <PieChart />
+//         </div>
+
+//         {/* Parallel coordinates */}
+//         <div className="chart">
+//           <PCP />
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default App;
+
+
+
+// import React, { useState, useEffect } from 'react';
+// import './App.css';
+
+// import ColumnSelector from './components/Column_Selector';
+// import WorldMap from './components/World_Map';
+// import BubbleChart from './components/Bubble_Chart';
+// import ClusterChart from './components/Cluster_Chart';
+// import ScatterPlot from './components/Scatter_Plot';
+// import PieChart from './components/Pie_Chart';
+// import PCP from './components/PCP';
+
+// function App() {
+//   const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+//   const [columnNames, setColumnNames] = useState([]);
+//   const [observatoryNames, setObservatoryNames] = useState([]);
+//   const [selectedColumn, setSelectedColumn] = useState('pl_rade');
+//   const [selectedObservatory, setSelectedObservatory] = useState('undefined');
+
+//   useEffect(() => {
+//     fetch(`${API_BASE}/columns`)
+//       .then(res => res.json())
+//       .then(cols => setColumnNames(cols.filter(c => c.startsWith('pl_'))))
+//       .catch(console.error);
+
+//     fetch(`${API_BASE}/data/map`)
+//       .then(res => res.json())
+//       .then(geojson => {
+//         const names = Array.from(new Set(
+//           geojson.features
+//             .filter(f => f.properties?.name)
+//             .map(f => f.properties.name)
+//         ));
+//         setObservatoryNames(names);
+//       })
+//       .catch(console.error);
+//   }, []);
+
+//   return (
+//     <div className="app-container">
+//       <header className="banner">
+//         <ColumnSelector
+//           columns={columnNames}
+//           selected={selectedColumn}
+//           onSelect={setSelectedColumn}
+//         />
+//         <h1 className="title">Exoplanet Dashboard</h1>
+//       </header>
+
+//       <main className="grid">
+//         <section className="chart map-chart">
+//           <WorldMap
+//             selectedObservatory={selectedObservatory}
+//             onSelectObservatory={setSelectedObservatory}
+//           />
+//         </section>
+
+//         <section className="chart bubble-chart">
+//           <BubbleChart facility={selectedObservatory} />
+//         </section>
+
+//         <section className="chart cluster-chart">
+//           <ClusterChart facility={selectedObservatory} />
+//         </section>
+
+//         <section className="chart scatter-chart">
+//           <ScatterPlot
+//             y={selectedColumn}
+//             onPointClick={() => {}}
+//           />
+//         </section>
+
+//         <section className="chart pie-chart">
+//           <PieChart />
+//         </section>
+
+//         <section className="chart pcp-chart">
+//           <PCP />
+//         </section>
+//       </main>
+//     </div>
+//   );
+// }
+
+// export default App;
+
+
+
+// src/App.js
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-import ColumnSelector   from './components/Column_Selector';
-import WorldMap         from './components/World_Map';
-import BubbleChart      from './components/Bubble_Chart';
-import ClusterChart     from './components/Cluster_Chart';
-import ScatterPlot      from './components/Scatter_Plot';
-import PieChart         from './components/Pie_Chart';
-import PCP              from './components/PCP';
+import ColumnSelector from './components/Column_Selector';
+import WorldMap from './components/World_Map';
+import BubbleChart from './components/Bubble_Chart';
+import ClusterChart from './components/Cluster_Chart';
+import ScatterPlot from './components/Scatter_Plot';
+import PieChart from './components/Pie_Chart';
+import PCP from './components/PCP';
 
 function App() {
   const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
-
-  // Numeric columns for scatter Y-axis
   const [columnNames, setColumnNames] = useState([]);
-  // Observatory names for filtering bubble & cluster charts
   const [observatoryNames, setObservatoryNames] = useState([]);
-
-  // Currently selected metric and observatory
-  const [selectedColumn, setSelectedColumn]       = useState('pl_rade');
+  // **New**: two pieces of state for axes
+  const [selectedX, setSelectedX] = useState('pl_orbeccen');
+  const [selectedY, setSelectedY] = useState('pl_rade');
   const [selectedObservatory, setSelectedObservatory] = useState('undefined');
 
   useEffect(() => {
-    // 1) Load exoplanet numeric columns
     fetch(`${API_BASE}/columns`)
       .then(res => res.json())
-      .then(cols => {
-        setColumnNames(cols.filter(c => c.startsWith('pl_')));
-      })
+      .then(cols => setColumnNames(cols.filter(c => c.startsWith('pl_'))))
       .catch(console.error);
 
-    // 2) Load observatory names from the map endpoint
     fetch(`${API_BASE}/data/map`)
       .then(res => res.json())
       .then(geojson => {
@@ -129,56 +316,62 @@ function App() {
 
   return (
     <div className="app-container">
+      <header className="banner">
 
-      {/* Top banner */}
-      <div className="banner">
+      {/* X‐Axis selector */}
+      <div className="axis-selector">
+        <label>X-Axis:</label>
         <ColumnSelector
           columns={columnNames}
-          selected={selectedColumn}
-          onSelect={setSelectedColumn}
+          selected={selectedX}
+          onSelect={setSelectedX}
         />
-        <div className="title">Exoplanet Dashboard</div>
       </div>
 
-      {/* Main grid */}
-      <div className="grid">
+      {/* Y‐Axis selector */}
+      <div className="axis-selector">
+        <label>Y-Axis:</label>
+        <ColumnSelector
+          columns={columnNames}
+          selected={selectedY}
+          onSelect={setSelectedY}
+        />
+      </div>
 
-        {/* World map */}
-        <div className="chart map-chart">
+        <h1 className="title">Exoplanet Dashboard</h1>
+      </header>
+
+      <main className="grid">
+        <section className="chart map-chart">
           <WorldMap
             selectedObservatory={selectedObservatory}
             onSelectObservatory={setSelectedObservatory}
           />
-        </div>
+        </section>
 
-        {/* Bubble chart */}
-        <div className="chart">
+        <section className="chart bubble-chart">
           <BubbleChart facility={selectedObservatory} />
-        </div>
+        </section>
 
-        {/* Cluster chart */}
-        <div className="chart">
+        <section className="chart cluster-chart">
           <ClusterChart facility={selectedObservatory} />
-        </div>
+        </section>
 
-        {/* Scatter plot */}
-        <div className="chart">
+        <section className="chart scatter-chart">
           <ScatterPlot
             y={selectedColumn}
             onPointClick={() => {}}
           />
-        </div>
+        </section>
 
-        {/* Pie chart */}
-        <div className="chart">
+        <section className="chart pie-chart">
           <PieChart />
-        </div>
+        </section>
 
-        {/* Parallel coordinates */}
-        <div className="chart">
+        <section className="chart pcp-chart">
           <PCP />
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }

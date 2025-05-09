@@ -217,18 +217,31 @@ const ScatterPlot = ({ x = "pl_orbeccen", y, onPointClick }) => {
   const [tooltip, setTooltip] = useState({ visible: false, content: "", x: 0, y: 0 });
   const svgRef = useRef(null);
 
+  // useEffect(() => {
+  //   if (!y) return;
+  //   fetch(`${API_BASE}/scatter_data?column=${y}`)
+  //     .then((res) => res.json())
+  //     .then((json) => {
+  //       setData({
+  //         xVals: json[x] || [],
+  //         yVals: json[y] || [],
+  //         names: json.pl_name || [],
+  //       });
+  //     })
+  //     .catch(console.error);
+  // }, [x, y]);
+
   useEffect(() => {
-    if (!y) return;
-    fetch(`${API_BASE}/scatter_data?column=${y}`)
-      .then((res) => res.json())
-      .then((json) => {
+    if (!x || !y) return;
+    fetch(`${API_BASE}/scatter_data?x=${x}&y=${y}`)
+      .then(r => r.json())
+      .then(json => {
         setData({
-          xVals: json[x] || [],
-          yVals: json[y] || [],
-          names: json.pl_name || [],
+          xVals: json[x],
+          yVals: json[y],
+          names: json.pl_name
         });
-      })
-      .catch(console.error);
+      });
   }, [x, y]);
 
   useEffect(() => {
