@@ -6,35 +6,96 @@ html, body { margin: 0; padding: 0; background-color: azure; font-family: Arial,
 .app-container { display: flex; flex-direction: column; width: 100%; }
 
 /* Banner */
-.banner { display: flex; align-items: center; background-color: #f8f9fa; padding: 10px 20px; }
-.title { flex-grow: 1; text-align: center; font-size: 24px; font-weight: bold; color: #333; margin: 0; }
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  background-color: #f8f9fa;
+  padding: 10px 20px;
+}
 
-/* Grid layout with proportional sizing */
+/* Container for axis selectors */
+.axis-selectors {
+  display: flex;
+  align-items: center;
+  /* Reserve a fixed width so header layout remains constant */
+  width: 300px; 
+}
+
+.axis-selector {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.axis-selector label {
+  margin-right: 5px;
+  font-weight: bold;
+}
+
+.title {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.toggle-btn {
+  width: 160px;
+  padding: 6px 12px;
+  font-size: 14px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+}
+
+
+.toggle-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Grid layout */
 .grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: 350px 350px 300px 300px;
-  grid-template-areas:
-    "map map map map map bubble bubble bubble"
-    "map map map map map cluster cluster cluster"
-    "scatter scatter scatter scatter scatter pie pie pie"
-    "scatter scatter scatter scatter scatter pie pie pie"
-    "pcp pcp pcp pcp pcp pcp pcp pcp"
-    "pcp pcp pcp pcp pcp pcp pcp pcp";
+  grid-template-rows: repeat(2, 350px);
   gap: 20px;
   padding: 20px;
 }
 
 /* Chart cards */
-.chart { background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 10px; display: flex; flex-direction: column; width: 100%; height: 100%; }
+.chart {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
 
-/* Area assignments */
-.map-chart { grid-area: map; }
-.bubble-chart { grid-area: bubble; }
-.cluster-chart { grid-area: cluster; }
-.scatter-chart { grid-area: scatter; }
-.pie-chart { grid-area: pie; }
-.pcp-chart { grid-area: pcp; }
+/* Chart layout assignments */
+.map-chart     { grid-column: span 5; }
+.bubble-chart  { grid-column: span 3; }
+.cluster-chart { grid-column: span 3; }
+
+.scatter-chart { grid-column: span 5; }
+.pie-chart     { grid-column: span 3; }
+.pcp-chart     { grid-column: span 8; height: 300px; }
 
 /* Tooltip styling */
-.tooltip { position: absolute; background: rgba(255,255,255,0.9); border: 1px solid #ccc; padding: 5px 10px; border-radius: 4px; pointer-events: none; font-size: 0.9rem; }
+.tooltip {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  border-radius: 4px;
+  pointer-events: none;
+  font-size: 0.9rem;
+}

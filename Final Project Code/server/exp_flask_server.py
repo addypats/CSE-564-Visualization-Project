@@ -1,3 +1,4 @@
+import csv
 import os
 from flask import Flask, jsonify, request
 import pandas as pd
@@ -5,6 +6,9 @@ from flask_cors import CORS
 import numpy as np
 import logging
 import json
+
+from sklearn.discriminant_analysis import StandardScaler
+from sklearn.cluster import DBSCAN
 
 
 app = Flask(__name__)
@@ -111,18 +115,15 @@ def clean_data(value):
 ###########################  WORKS  ###########################
 
 
-
-
 @app.route('/scatter_data')
 def scatter_data():
-    # Fixed x-axis column
-    x_column = 'pl_orbeccen'
-    # Dynamic y-axis provided via query, default to 'pl_rade'
-    y_column = request.args.get('column', 'pl_rade')
+    # Extract x and y axis column names from query parameters
+    x_column = request.args.get('x', 'pl_orbeccen')  # Default: pl_orbeccen
+    y_column = request.args.get('y', 'pl_rade')      # Default: pl_rade
 
-    # Verify columns exist
+    # Check if both columns exist in the dataset
     if x_column not in data.columns or y_column not in data.columns:
-        return jsonify({'error': 'Column not found'}), 404
+        return jsonify({'error': 'One or both columns not found'}), 404
 
     scatter_plot_data = {
         x_column: [],
@@ -130,7 +131,7 @@ def scatter_data():
         'pl_name': []
     }
 
-    # Iterate and collect non-null pairs
+    # Collect non-null data for both columns
     for _, row in data.iterrows():
         x = row[x_column]
         y = row[y_column]
@@ -140,6 +141,7 @@ def scatter_data():
             scatter_plot_data['pl_name'].append(row['pl_name'])
 
     return jsonify(scatter_plot_data)
+
 
 ###########################  WORKS  ###########################
 
@@ -191,6 +193,161 @@ def pcp_data():
 
 
 ###########################  WORKS  ###########################
+
+
+
+@app.route('/data/map')
+def map_data():
+    # Assume you have a function to get your GeoJSON data
+    worldData = get_geojson_data()
+    observatoryLocationData = get_observatory_location_data()
+    data = merge_features(worldData,[observatoryLocationData])
+    return jsonify(data)
+
+
+
+# map_data helper functions
+
+def merge_features(target_json, source_jsons):
+    for json in source_jsons:
+        target_json['features'] = target_json['features'] + json['features']
+    return target_json
+
+def get_observatory_location_data():
+    df = pd.read_csv('data_exo.csv')
+
+    geojson_features = []
+    with open('data_exo.csv', mode='r', encoding='utf-8') as file:
+        csv_reader = csv.DictReader(file)
+        for row in csv_reader:
+            try:
+                # Convert latitude and longitude to float
+                latitude = float(row['lat']) if row['lat'] else None
+                longitude = float(row['long']) if row['long'] else None
+                
+                # Skip rows with missing latitude or longitude
+                if latitude is not None and longitude is not None:
+                    feature = {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [longitude, latitude]
+                        },
+                        "properties": {
+                            "name": row['disc_facility']
+                        }
+                    }
+                    geojson_features.append(feature)
+            except ValueError:
+                print(f"Skipping row with invalid data: {row}")
+        
+        geojson_features = {
+            "type" : "FeatureCollection",
+            "features" : geojson_features
+        }
+
+        return geojson_features
+
+def get_geojson_data():
+    with open('geo.json', 'r', encoding='utf-8') as f:
+        geojson_data = json.load(f)
+    return geojson_data
+
+
+@app.route('/data/dbscanChart/<string:filterByObservatoryName>')
+def dbscan_chart_data(filterByObservatoryName):
+    chart_data = []    
+    distances = []
+    earth = {
+        "st_met": 0.012,
+        "pl_orbper": 365.256363,
+        "pl_orbeccen": 0.0167,
+        "pl_bmasse": 1,
+        "pl_insol": 1
+    }
+
+    with open('data_exo.csv', mode='r', encoding='utf-8') as file:
+        csv_reader = csv.DictReader(file)
+        for row in csv_reader:
+            try:
+                if filterByObservatoryName != 'undefined' and row['disc_facility'] != filterByObservatoryName:
+                    continue
+                
+                pl_name = row['pl_name'] if row['pl_name'] else None
+                st_met = row['st_met'] if row['st_met'] else None
+                pl_orbper = float(row['pl_orbper']) if row['pl_orbper'] else None
+                pl_orbeccen = float(row['pl_orbeccen']) if row['pl_orbeccen'] else None
+                pl_bmasse = float(row['pl_bmasse']) if row['pl_bmasse'] else None
+                pl_insol = float(row['pl_insol']) if row['pl_insol'] else None
+
+                if pl_name is not None and st_met is not None and pl_orbper is not None and pl_orbeccen is not None and pl_bmasse is not None and pl_insol is not None:
+                    dataPoint = {
+                        "pl_name": pl_name,
+                        "st_met": st_met,
+                        "pl_orbper": pl_orbper,
+                        "pl_orbeccen": pl_orbeccen,
+                        "pl_bmasse":pl_bmasse,
+                        "pl_insol": pl_insol
+                    }
+                    distance = calculate_distance(dataPoint, earth)
+                    distances.append(distance)
+                    chart_data.append(dataPoint)
+            except ValueError:
+           
+                print(f"Skipping row with invalid data: {row}")
+    
+
+
+    # Normalize distances and perform DBSCAN clustering
+    scaler = StandardScaler()
+    normalized_distances = scaler.fit_transform(np.array(distances).reshape(-1, 1))
+    dbscan = DBSCAN(eps=0.3, min_samples=2)
+    cluster_labels = dbscan.fit_predict(normalized_distances)
+
+    # Combine data points, distances, and their cluster labels
+    for index, data_point in enumerate(chart_data):
+        data_point['distance_from_earth'] = distances[index]
+        data_point['cluster'] = int(cluster_labels[index])
+
+    return chart_data
+
+def calculate_distance(planet, earth):
+    return np.sqrt(
+        (float(planet['st_met']) - earth['st_met']) ** 2 +
+        (planet['pl_orbper'] - earth['pl_orbper']) ** 2 +
+        (planet['pl_orbeccen'] - earth['pl_orbeccen']) ** 2 +
+        (planet['pl_bmasse'] - earth['pl_bmasse']) ** 2 +
+        (planet['pl_insol'] - earth['pl_insol']) ** 2
+    )
+
+@app.route('/data/bubbleChart/<string:filterByObservatoryName>')
+def bubble_chart_data(filterByObservatoryName):
+    bubble_chart_data = []
+    with open('data_exo.csv', mode='r', encoding='utf-8') as file:
+        csv_reader = csv.DictReader(file)
+        for row in csv_reader:
+            try:
+                if filterByObservatoryName != 'undefined' and row['disc_facility'] != filterByObservatoryName:
+                    continue
+
+                pl_name = row['pl_name'] if row['pl_name'] else None
+                pl_bmasse = float(row['pl_bmasse']) if row['pl_bmasse'] else None
+                sy_dist = float(row['sy_dist']) if row['sy_dist'] else None
+                pl_rade = float(row['pl_rade']) if row['pl_rade'] else None
+
+                if pl_name is not None and pl_bmasse is not None and sy_dist is not None and pl_rade is not None:
+                    dataPoint = {
+                        "pl_name": pl_name,
+                        "pl_bmasse": pl_bmasse,
+                        "sy_dist": sy_dist,
+                        "pl_rade":pl_rade
+                    }
+                    bubble_chart_data.append(dataPoint)
+            except ValueError:
+                print(f"Skipping row with invalid data: {row}")
+    return bubble_chart_data
+
+
 
 # --------------------
 # Main Entrypoint

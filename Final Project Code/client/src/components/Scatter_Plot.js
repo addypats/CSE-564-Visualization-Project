@@ -246,7 +246,8 @@ const ScatterPlot = ({ x = "pl_orbeccen", y, onPointClick }) => {
 
   useEffect(() => {
     const { xVals, yVals } = data;
-    if (xVals.length === 0) return;
+    if (!xVals || !yVals) return;
+    if (xVals?.length === 0) return;
 
     const margin = { top: 50, right: 30, bottom: 90, left: 100 };
     const width = 720 - margin.left - margin.right;

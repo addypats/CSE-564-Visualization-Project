@@ -274,7 +274,111 @@
 
 
 
-// src/App.js
+// // src/App.js
+// import React, { useState, useEffect } from 'react';
+// import './App.css';
+
+// import ColumnSelector from './components/Column_Selector';
+// import WorldMap from './components/World_Map';
+// import BubbleChart from './components/Bubble_Chart';
+// import ClusterChart from './components/Cluster_Chart';
+// import ScatterPlot from './components/Scatter_Plot';
+// import PieChart from './components/Pie_Chart';
+// import PCP from './components/PCP';
+
+// function App() {
+//   const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+//   const [columnNames, setColumnNames] = useState([]);
+//   const [observatoryNames, setObservatoryNames] = useState([]);
+//   // **New**: two pieces of state for axes
+//   const [selectedX, setSelectedX] = useState('pl_orbeccen');
+//   const [selectedY, setSelectedY] = useState('pl_rade');
+//   const [selectedObservatory, setSelectedObservatory] = useState('undefined');
+//   const [selectedDiscoveryMethods, setSelectedDiscoveryMethods] = useState([]);
+
+//   useEffect(() => {
+//     fetch(`${API_BASE}/columns`)
+//       .then(res => res.json())
+//       .then(cols => setColumnNames(cols.filter(c => c.startsWith('pl_'))))
+//       .catch(console.error);
+
+//     fetch(`${API_BASE}/data/map`)
+//       .then(res => res.json())
+//       .then(geojson => {
+//         const names = Array.from(new Set(
+//           geojson.features
+//             .filter(f => f.properties?.name)
+//             .map(f => f.properties.name)
+//         ));
+//         setObservatoryNames(names);
+//       })
+//       .catch(console.error);
+//   }, []);
+
+//   return (
+//     <div className="app-container">
+//       <header className="banner">
+
+//       {/* X‐Axis selector */}
+//       <div className="axis-selector">
+//         <label>X-Axis:</label>
+//         <ColumnSelector
+//           columns={columnNames}
+//           selected={selectedX}
+//           onSelect={setSelectedX}
+//         />
+//       </div>
+
+//       {/* Y‐Axis selector */}
+//       <div className="axis-selector">
+//         <label>Y-Axis:</label>
+//         <ColumnSelector
+//           columns={columnNames}
+//           selected={selectedY}
+//           onSelect={setSelectedY}
+//         />
+//       </div>
+
+//         <h1 className="title">Exoplanet Dashboard</h1>
+//       </header>
+
+//       <main className="grid">
+//         <section className="chart map-chart">
+//           <WorldMap
+//             selectedObservatory={selectedObservatory}
+//             onSelectObservatory={setSelectedObservatory}
+//           />
+//         </section>
+
+//         <section className="chart bubble-chart">
+//           <BubbleChart facility={selectedObservatory} />
+//         </section>
+
+//         <section className="chart cluster-chart">
+//           <ClusterChart facility={selectedObservatory} />
+//         </section>
+
+//         <section className="chart scatter-chart">
+//           <ScatterPlot
+//             x={selectedX}
+//             y={selectedY}
+//             onPointClick={() => {}}
+//           />
+//         </section>
+
+//         <section className="chart pie-chart">
+//           <PieChart onSelectionChange={setSelectedDiscoveryMethods}/>
+//         </section>
+
+//         <section className="chart pcp-chart">
+//           <PCP selectedDiscoveryMethods={selectedDiscoveryMethods}/>
+//         </section>
+//       </main>
+//     </div>
+//   );
+// }
+
+// export default App;
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
@@ -290,10 +394,11 @@ function App() {
   const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
   const [columnNames, setColumnNames] = useState([]);
   const [observatoryNames, setObservatoryNames] = useState([]);
-  // **New**: two pieces of state for axes
   const [selectedX, setSelectedX] = useState('pl_orbeccen');
   const [selectedY, setSelectedY] = useState('pl_rade');
   const [selectedObservatory, setSelectedObservatory] = useState('undefined');
+  const [selectedDiscoveryMethods, setSelectedDiscoveryMethods] = useState([]);
+  const [showAltGroup, setShowAltGroup] = useState(false); // toggle state
 
   useEffect(() => {
     fetch(`${API_BASE}/columns`)
@@ -304,11 +409,13 @@ function App() {
     fetch(`${API_BASE}/data/map`)
       .then(res => res.json())
       .then(geojson => {
-        const names = Array.from(new Set(
-          geojson.features
-            .filter(f => f.properties?.name)
-            .map(f => f.properties.name)
-        ));
+        const names = Array.from(
+          new Set(
+            geojson.features
+              .filter(f => f.properties?.name)
+              .map(f => f.properties.name)
+          )
+        );
         setObservatoryNames(names);
       })
       .catch(console.error);
@@ -317,60 +424,75 @@ function App() {
   return (
     <div className="app-container">
       <header className="banner">
+        {/* Always render the axis selector container.
+            When not in scatter view, we hide the content but reserve the space */}
+        <div
+          className="axis-selectors"
+          style={{ visibility: showAltGroup ? 'visible' : 'hidden' }}
+        >
+          <div className="axis-selector">
+            <label>X-Axis:</label>
+            <ColumnSelector
+              columns={columnNames}
+              selected={selectedX}
+              onSelect={setSelectedX}
+            />
+          </div>
 
-      {/* X‐Axis selector */}
-      <div className="axis-selector">
-        <label>X-Axis:</label>
-        <ColumnSelector
-          columns={columnNames}
-          selected={selectedX}
-          onSelect={setSelectedX}
-        />
-      </div>
-
-      {/* Y‐Axis selector */}
-      <div className="axis-selector">
-        <label>Y-Axis:</label>
-        <ColumnSelector
-          columns={columnNames}
-          selected={selectedY}
-          onSelect={setSelectedY}
-        />
-      </div>
+          <div className="axis-selector">
+            <label>Y-Axis:</label>
+            <ColumnSelector
+              columns={columnNames}
+              selected={selectedY}
+              onSelect={setSelectedY}
+            />
+          </div>
+        </div>
 
         <h1 className="title">Exoplanet Dashboard</h1>
+
+        <button className="toggle-btn" onClick={() => setShowAltGroup(!showAltGroup)}>
+          {showAltGroup ? 'Show Map View' : 'Show Scatter View'}
+        </button>
       </header>
 
       <main className="grid">
-        <section className="chart map-chart">
-          <WorldMap
-            selectedObservatory={selectedObservatory}
-            onSelectObservatory={setSelectedObservatory}
-          />
-        </section>
+        {!showAltGroup ? (
+          <>
+            <section className="chart map-chart">
+              <WorldMap
+                selectedObservatory={selectedObservatory}
+                onSelectObservatory={setSelectedObservatory}
+              />
+            </section>
 
-        <section className="chart bubble-chart">
-          <BubbleChart facility={selectedObservatory} />
-        </section>
+            <section className="chart bubble-chart">
+              <BubbleChart facility={selectedObservatory} />
+            </section>
 
-        <section className="chart cluster-chart">
-          <ClusterChart facility={selectedObservatory} />
-        </section>
+            <section className="chart cluster-chart">
+              <ClusterChart facility={selectedObservatory} />
+            </section>
+          </>
+        ) : (
+          <>
+            <section className="chart scatter-chart">
+              <ScatterPlot
+                x={selectedX}
+                y={selectedY}
+                onPointClick={() => {}}
+              />
+            </section>
 
-        <section className="chart scatter-chart">
-          <ScatterPlot
-            y={selectedColumn}
-            onPointClick={() => {}}
-          />
-        </section>
+            <section className="chart pie-chart">
+              <PieChart onSelectionChange={setSelectedDiscoveryMethods} />
+            </section>
 
-        <section className="chart pie-chart">
-          <PieChart />
-        </section>
-
-        <section className="chart pcp-chart">
-          <PCP />
-        </section>
+            <section className="chart pcp-chart">
+              <PCP selectedDiscoveryMethods={selectedDiscoveryMethods} />
+            </section>
+          </>
+        )}
       </main>
     </div>
   );
