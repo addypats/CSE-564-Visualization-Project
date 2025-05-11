@@ -216,9 +216,8 @@ import * as d3 from 'd3';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
-const WorldMap = ({ selectedObservatory, onSelectObservatory }) => {
+const WorldMap = ({ selectedObservatories, onSelectObservatories }) => {
   const svgRef = useRef(null);
-  const [selectedObservatories, setSelectedObservatories] = useState([]);
 
   useEffect(() => {
     fetch(`${API_BASE}/data/map`)
@@ -230,11 +229,11 @@ const WorldMap = ({ selectedObservatory, onSelectObservatory }) => {
   }, [selectedObservatories]);
 
   const toggleObservatory = (name) => {
-    setSelectedObservatories(prev =>
-      prev.includes(name)
-        ? prev.filter(o => o !== name)
-        : [...prev, name]
-    );
+    const updated = selectedObservatories.includes(name)
+      ? selectedObservatories.filter(o => o !== name)
+      : [...selectedObservatories, name];
+
+    onSelectObservatories(updated);
   };
 
   const drawMap = (geojson) => {

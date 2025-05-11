@@ -90,6 +90,23 @@ def get_planet_info():
 
 ###########################  WORKS  ###########################
 
+@app.route('/radar-data/<string:observatory_name>')
+def radar_chart_data(observatory_name):
+    features = ['pl_orbeccen', 'pl_rade', 'pl_bmasse', 'pl_orbper', 'sy_dist', 'st_met']
+    filtered = data[data['disc_facility'] == observatory_name]
+
+    if filtered.empty:
+        return jsonify({'error': 'Observatory not found or no data'}), 404
+
+    feature_means = {}
+    for feat in features:
+        if feat in filtered.columns:
+            filtered_feat = pd.to_numeric(filtered[feat], errors='coerce').dropna()
+            feature_means[feat] = filtered_feat.mean() if not filtered_feat.empty else 0.0
+        else:
+            feature_means[feat] = 0.0
+
+    return jsonify(feature_means)
 
 
 def clean_data(value):
@@ -203,6 +220,35 @@ def map_data():
     observatoryLocationData = get_observatory_location_data()
     data = merge_features(worldData,[observatoryLocationData])
     return jsonify(data)
+
+
+@app.route('/radar-data', methods=['GET'])
+def radar_data_multiple():
+    try:
+        obs_header = request.headers.get('Selected-Observatories')
+        observatories = json.loads(obs_header) if obs_header else []
+    except Exception:
+        return jsonify({'error': 'Invalid header format'}), 400
+
+    features = ['pl_orbeccen', 'pl_rade', 'pl_bmasse', 'pl_orbper', 'sy_dist', 'st_met']
+    result = []
+
+    for obs in observatories:
+        filtered = data[data['disc_facility'] == obs]
+        if filtered.empty:
+            continue
+
+        obs_data = {'observatory': obs}
+        for feat in features:
+            if feat in filtered.columns:
+                cleaned = pd.to_numeric(filtered[feat], errors='coerce').dropna()
+                obs_data[feat] = cleaned.mean() if not cleaned.empty else 0.0
+            else:
+                obs_data[feat] = 0.0
+
+        result.append(obs_data)
+
+    return jsonify(result)
 
 
 
