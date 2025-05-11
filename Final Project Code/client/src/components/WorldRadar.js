@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import RadarChart from "react-svg-radar-chart";
+// import RadarChart from "react-svg-radar-chart";
 import "react-svg-radar-chart/build/css/index.css";
 import * as d3 from "d3";
+import '../styles/RadarChart.css';
 
 const WorldRadar = ({ selectedCountries }) => {
   const [radarData, setRadarData] = useState([]);

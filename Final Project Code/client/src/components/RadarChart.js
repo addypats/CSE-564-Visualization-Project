@@ -1,7 +1,8 @@
 // src/components/RadarChart.js
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import './RadarChart.css';
+// import './RadarChart.css';
+import '../styles/RadarChart.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
