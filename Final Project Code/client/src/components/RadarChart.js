@@ -1,7 +1,5 @@
-// src/components/RadarChart.js
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-// import './RadarChart.css';
 import '../styles/RadarChart.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
@@ -16,14 +14,18 @@ export const FEATURES = [
   'st_met'       // Stellar metallicity [Fe/H]
 ];
 
+const FEATURE_LABELS = {
+  'pl_orbeccen': 'Orbital Eccentricity',
+  'pl_rade':     'Radius',
+  'pl_bmasse':   'Mass',
+  'pl_orbper':   'Orbital Period (days)',
+  'sy_dist':     'System Distance',
+  'st_met':      'Stellar Metallicity [Fe/H]',
+};
+
 const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
-/**
- * Responsive radar chart comparing averaged planetary features for one or more observatories.
- *
- * Props
- *   observatories: string[] – list of observatory names selected on the map.
- */
+
 const RadarChart = ({ observatories }) => {
   const containerRef = useRef(null);
   const svgRef       = useRef(null);
@@ -89,13 +91,17 @@ const RadarChart = ({ observatories }) => {
       .attr('transform', `translate(${outerW / 2}, ${outerH / 2})`);
 
     /* ---------- Feature‑wise min‑max normalisation ---------- */
-    const featureStats = FEATURES.map(f => {
-      const vals = data.map(d => +d[f] || 0);
-      return {
-        min: d3.min(vals),
-        max: d3.max(vals)
-      };
-    });
+    const GLOBAL_FEATURE_STATS = {
+      pl_orbeccen: { min: 0, max: 1 },
+      pl_rade:     { min: 0, max: 20 },
+      pl_bmasse:   { min: 0, max: 200 },
+      pl_orbper:   { min: 0, max: 10000 },
+      sy_dist:     { min: 0, max: 2000 },
+      st_met:      { min: -1, max: 1 }
+    };
+
+    const featureStats = FEATURES.map(f => GLOBAL_FEATURE_STATS[f]);
+
 
     // Fall‑back to avoid zero‑extent ranges (division by zero)
     featureStats.forEach(stat => {
@@ -133,14 +139,17 @@ const RadarChart = ({ observatories }) => {
       .attr('dy', '0.35em')
       .style('font-size', 12)
       .style('fill', '#333')
-      .text(d => d);
+      .text(d => FEATURE_LABELS[d] || d);
 
     /* ---------- Line generator ---------- */
     const radarLine = d3.lineRadial()
       .radius((d, i) => {
         const { min, max } = featureStats[i];
-        return ((d.value - min) / (max - min)) * radius;
+        const normalized = (d.value - min) / (max - min);
+        const clamped = Math.max(0, Math.min(1, normalized));
+        return clamped * radius;
       })
+
       .angle((_, i) => i * angleSlice)
       .curve(d3.curveCardinalClosed);
 
@@ -190,7 +199,7 @@ const RadarChart = ({ observatories }) => {
           .style('opacity', 1)
           .style('left', `${event.pageX + 8}px`)
           .style('top',  `${event.pageY - 28}px`)
-          .html(`<strong>${d.observatory}</strong><br/>${d.axis}: ${d.value}`);
+          .html(`<strong>${d.observatory}</strong><br/>${FEATURE_LABELS[d.axis] || d.axis}: ${d.value}`);
       })
       .on('mouseout', () => {
         d3.select(tooltipRef.current).style('opacity', 0);

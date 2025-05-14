@@ -8,11 +8,38 @@ html, body { margin: 0; padding: 0; background-color: azure; font-family: Arial,
 /* Banner */
 .banner {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   align-items: center;
   background-color: #f8f9fa;
   padding: 10px 20px;
 }
+
+.banner-left {
+  width: 250px; /* Reserve left-side space to center title */
+}
+
+.banner-center {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.banner-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  flex-wrap: nowrap; /* ✅ prevent stacking */
+}
+
+.axis-selector-group {
+  display: flex;
+  flex-direction: row; /* 🧠 ensures they go side-by-side */
+  align-items: center;
+  gap: 10px;
+}
+
 .radar-chart {
   grid-column: span 2;
   padding: 10px;

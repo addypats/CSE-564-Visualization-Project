@@ -22,7 +22,6 @@ CORS(app)
 # Load data
 data = pd.read_csv('data_exo.csv')
 
-###########################  WORKS  ###########################
 
 @app.route('/columns', methods=['GET'])
 def get_columns():
@@ -30,7 +29,6 @@ def get_columns():
     column_names = data.columns.tolist()
     return jsonify(column_names)
 
-###########################  WORKS  ###########################
 
 def clean_percentage(value):
     """Convert percentage strings to float numbers."""
@@ -39,8 +37,6 @@ def clean_percentage(value):
         return float(value.replace('%', ''))
     return value
 
-
-###########################  WORKS  ###########################
 
 @app.route('/getdata', methods=['GET'])
 def get_data():
@@ -52,9 +48,6 @@ def get_data():
     print("#######################################\n")
     print(data.columns)
     print("#######################################\n")
-
-    # app.logger.debug(f"Requested column: {column_name}")
-    # app.logger.debug(f"Available columns: {data.columns.tolist()}")
 
     if column_name not in data.columns:
         return jsonify({'error': 'Column not found'}), 404
@@ -72,8 +65,6 @@ def get_data():
     return jsonify(payload)
 
 
-###########################  WORKS  ###########################
-
 @app.route('/planet-info', methods=['GET'])
 def get_planet_info():
     # Build a mapping from planet name to full record
@@ -88,7 +79,6 @@ def get_planet_info():
             result[name] = clean_rec
     return jsonify(result)
 
-###########################  WORKS  ###########################
 
 @app.route('/radar-data/<string:observatory_name>')
 def radar_chart_data(observatory_name):
@@ -129,9 +119,6 @@ def clean_data(value):
     return None
 
 
-###########################  WORKS  ###########################
-
-
 @app.route('/scatter_data')
 def scatter_data():
     # Extract x and y axis column names from query parameters
@@ -160,9 +147,6 @@ def scatter_data():
     return jsonify(scatter_plot_data)
 
 
-###########################  WORKS  ###########################
-
-
 @app.route('/pie-chart')
 def pie_chart():
     method_col = 'discoverymethod'
@@ -170,8 +154,6 @@ def pie_chart():
         return jsonify({'error': f'Column "{method_col}" not found'}), 404
     pie_df = data.groupby(method_col).size().reset_index(name='count')
     return jsonify(pie_df.to_dict(orient='records'))
-
-###########################  WORKS  ###########################
 
 
 def clean_data_pcp(value):
@@ -186,7 +168,6 @@ def clean_data_pcp(value):
         return None if pd.isna(value) else value
     return None
 
-###########################  WORKS  ###########################
 
 @app.route('/pcp')
 def pcp_data():
@@ -207,10 +188,6 @@ def pcp_data():
     columns_to_send = [*categorical_columns, *numeric_cols]
     filtered_data = cleaned_df[columns_to_send]
     return jsonify({'data': filtered_data.to_dict(orient='records'), 'mappings': mappings})
-
-
-###########################  WORKS  ###########################
-
 
 
 @app.route('/data/map')
@@ -315,4 +292,3 @@ if __name__ == '__main__':
     # For production, disable debug and consider a WSGI server
     app.run(host='0.0.0.0', port=5001, debug=True)
 
-###########################  WORKS  ###########################

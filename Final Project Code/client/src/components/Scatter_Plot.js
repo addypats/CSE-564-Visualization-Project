@@ -1,4 +1,3 @@
-// src/components/ScatterPlot.js
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
@@ -8,6 +7,23 @@ const ScatterPlot = ({ x = "pl_orbeccen", y, onPointClick }) => {
   const [data, setData] = useState({ xVals: [], yVals: [], names: [] });
   const [tooltip, setTooltip] = useState({ visible: false, content: "", x: 0, y: 0 });
   const svgRef = useRef(null);
+
+const FEATURE_LABELS = {
+  pl_orbeccen: "Orbital Eccentricity",
+  pl_rade: "Radius (Earth radii)",
+  pl_bmasse: "Mass (Earth masses)",
+  pl_orbper: "Orbital Period (days)",
+  sy_dist: "System Distance (pc)",
+  st_met: "Stellar Metallicity [Fe/H]",
+  st_teff: "Stellar Temperature (K)",
+  st_mass: "Stellar Mass (Solar)",
+  st_rad: "Stellar Radius (Solar)",
+  pl_eqt: "Equilibrium Temp (K)",
+  pl_insol: "Insolation Flux",
+  pl_orbsmax: "Semi-Major Axis (AU)",
+  pl_name: "Planet Name"
+};
+
 
   useEffect(() => {
     if (!x || !y) return;
@@ -55,7 +71,7 @@ const ScatterPlot = ({ x = "pl_orbeccen", y, onPointClick }) => {
       .on("mouseenter", (event, d) => {
         setTooltip({
           visible: true,
-          content: `${d.name}: ${d.y}`,
+          content: `<strong>${d.name}</strong><br/>${FEATURE_LABELS[y] || y}: ${d.y.toFixed(2)}`,
           x: event.clientX,
           y: event.clientY,
         });
@@ -78,7 +94,7 @@ const ScatterPlot = ({ x = "pl_orbeccen", y, onPointClick }) => {
       .attr("y", height + 60)
       .style("fill", "black")
       .style("font-size", "14px")
-      .text(x);
+      .text(FEATURE_LABELS[x] || x);
 
     g.append("text")
       .attr("class", "y axis-label")
@@ -86,7 +102,7 @@ const ScatterPlot = ({ x = "pl_orbeccen", y, onPointClick }) => {
       .attr("transform", `translate(${-60},${height / 2}) rotate(-90)`)
       .style("fill", "black")
       .style("font-size", "14px")
-      .text(y);
+      .text(FEATURE_LABELS[y] || y);
 
     svg
       .append("text")
@@ -95,7 +111,7 @@ const ScatterPlot = ({ x = "pl_orbeccen", y, onPointClick }) => {
       .attr("text-anchor", "middle")
       .style("font-size", "16px")
       .style("text-decoration", "underline")
-      .text(`Scatter: ${x} vs. ${y}`);
+      .text(`Scatter: ${FEATURE_LABELS[x] || x} vs. ${FEATURE_LABELS[y] || y}`);
   }, [data, x, y, onPointClick]);
 
   return (
@@ -107,21 +123,20 @@ const ScatterPlot = ({ x = "pl_orbeccen", y, onPointClick }) => {
         style={{ width: "100%", height: "100%" }}
       />
       {tooltip.visible && (
-        <div
-          style={{
-            position: "absolute",
-            left: tooltip.x + 10,
-            top: tooltip.y + 10,
-            background: "white",
-            border: "1px solid black",
-            padding: "5px",
-            pointerEvents: "none",
-            zIndex: 10,
-          }}
-        >
-          {tooltip.content}
-        </div>
-      )}
+      <div
+        style={{
+          position: "absolute",
+          left: tooltip.x + 10,
+          top: tooltip.y + 10,
+          background: "white",
+          border: "1px solid black",
+          padding: "5px",
+          pointerEvents: "none",
+          zIndex: 10,
+        }}
+        dangerouslySetInnerHTML={{ __html: tooltip.content }}
+      />
+    )}
     </div>
   );
 };
